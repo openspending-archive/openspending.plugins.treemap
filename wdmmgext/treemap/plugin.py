@@ -13,6 +13,7 @@ from wdmmg.plugins import IGenshiStreamFilter
 
 TITLE_CUTOFF = 0.02
 
+# TODO: Move CSS to its own file. 
 HEAD_SNIPPET = """
 <!-- wdmmg-treemap includes -->
 <script src="/js/thejit-2.js"></script>
@@ -60,15 +61,15 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
         from pylons import tmpl_context as c 
         if hasattr(c, 'aggregates') and hasattr(c, 'time'):
             if len(c.aggregates): 
-                data = self._generate_data_dict(c.aggregates, c.time, 
+                tree_json = self._generate_tree_json(c.aggregates, c.time, 
                         c.totals.get(c.time, 0), c.aggregate_url)
                 stream = stream | Transformer('html/head')\
-                    .append(HTML(HEAD_SNIPPET % data))
+                    .append(HTML(HEAD_SNIPPET % tree_json))
                 stream = stream | Transformer('//div[@id="description"]')\
                     .before(HTML(BODY_SNIPPET))
         return stream 
 
-    def _generate_data_dict(self, aggregates, time, total, urlfunc):
+    def _generate_tree_json(self, aggregates, time, total, urlfunc):
         fields = []
         for obj, time_values in aggregates:
             value = time_values.get(time)
