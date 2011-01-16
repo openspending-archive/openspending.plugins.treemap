@@ -15,54 +15,20 @@ var labelType, useGradients, nativeTextSupport, animate;
   animate = !(iStuff || !nativeCanvasSupport);
 })();
 
-/*
-var Log = {
-  elem: false,
-  write: function(text){
-    if (!this.elem) 
-      this.elem = document.getElementById('log');
-    this.elem.innerHTML = text;
-    this.elem.style.left = (500 - this.elem.offsetWidth / 2) + 'px';
-  }
-};
-
-
-var formatNumber = function(n){
-  var s = String(n).replace(/\./,",");
-  var r = /(\d+)(\d{3})/;
-  while (r.test(s)){
-    s = s.replace(r,"$1.$2");  
-  }
-  return s;
-};
-*/
-
-
 function init_treemap(json){
-  //init TreeMap
   var tm = new $jit.TM.Squarified({
-    //where to inject the visualization
     injectInto: 'treemap',
-    //show only one tree level
     levelsToShow: 1,
-    //parent box title heights
     titleHeight: 0,
-    //enable animations
     animate: animate,
     
-    //cushion: useGradients,
-    //box offsets
     offset: 2,
-    //use canvas text
     Label: {
-//      type: labelType,
       type: 'HTML',
       size: 12,
       family: 'Tahoma, Verdana, Arial',
       color: '#DDE7F0'
       },
-    //enable specific canvas styles
-    //when rendering nodes
     Node: {
       color: '#243448',
       CanvasStyles: {
@@ -70,7 +36,6 @@ function init_treemap(json){
         shadowColor: '#000'
       }
     },
-    //Attach left and right click events
     Events: {
       enable: true,
       onClick: function(node) {
@@ -81,11 +46,8 @@ function init_treemap(json){
       onRightClick: function() {
         tm.out();
       },
-      //change node styles and canvas styles
-      //when hovering a node
       onMouseEnter: function(node, eventInfo) {
         if(node) {
-          //add node selected styles and replot node
           node.setCanvasStyle('shadowBlur', 8);
           node.orig_color = node.getData('color');
           node.setData('color', '#A3B3C7');
@@ -102,18 +64,12 @@ function init_treemap(json){
         }
       }
     },
-    //duration of the animations
     duration: 1000,
-    //Enable tips
     Tips: {
       enable: true,
       type: 'Native',
-      //add positioning offsets
       offsetX: 20,
       offsetY: 20,
-      //implement the onShow method to
-      //add content to the tooltip when a node
-      //is hovered
       onShow: function(tip, node, isLeaf, domElement) {
         var html = "<div class=\"tip-title\">" + node.name 
 					+ ": " + node.data.printable_value
@@ -147,33 +103,3 @@ function init_treemap(json){
   tm.loadJSON(json);
   tm.refresh();
 }
-
-function init_history(json, color){
-	var barChart = new $jit.BarChart({  
-	  injectInto: 'history_graph',
-	  animate: true,  
-	  orientation: 'vertical',  
-	  hoveredColor: '#A4CC77',
-	  barsOffset: 6,  
-	  offset: 8,  
-	  labelOffset: 5,  
-	  type: 'stacked',  
-	  showAggregates:false, 
-	  showLabels:true,  
-	  Label: {  
-	    type: labelType, //Native or HTML  
-	    size: 11,  
-	    family: 'Arial',  
-	    color: '#1B283A'  
-	  },  
-	  Tips: {  
-	    enable: true,  
-	    onShow: function(tip, elem, obj) {  
-	      tip.innerHTML = "<b>" + obj.name + "</b>: " + formatNumber(elem.value);
-	    }  
-	  }  
-	});  
-	barChart.colors = [color];	
-	barChart.loadJSON(json);
-}
-
