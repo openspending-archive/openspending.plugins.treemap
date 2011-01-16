@@ -59,12 +59,13 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
     def filter(self, stream):
         from pylons import tmpl_context as c 
         if hasattr(c, 'aggregates') and hasattr(c, 'time'):
-            data = self._generate_data_dict(c.aggregates, c.time, 
-                    c.totals.get(c.time, 0), c.aggregate_url)
-            stream = stream | Transformer('html/head')\
-                .append(HTML(HEAD_SNIPPET % data))
-            stream = stream | Transformer('//div[@id="description"]')\
-                .before(HTML(BODY_SNIPPET))
+            if len(c.aggregates): 
+                data = self._generate_data_dict(c.aggregates, c.time, 
+                        c.totals.get(c.time, 0), c.aggregate_url)
+                stream = stream | Transformer('html/head')\
+                    .append(HTML(HEAD_SNIPPET % data))
+                stream = stream | Transformer('//div[@id="description"]')\
+                    .before(HTML(BODY_SNIPPET))
         return stream 
 
     def _generate_data_dict(self, aggregates, time, total, urlfunc):
