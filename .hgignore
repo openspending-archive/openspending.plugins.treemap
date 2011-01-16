@@ -1,0 +1,9 @@
+syntax: glob
+
+.DS_Store
+*.DS_Store
+.~*
+*.pyc
+*.swp
+*.swo
+*.egg-info
