@@ -62,31 +62,31 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
         if hasattr(c, 'aggregates') and hasattr(c, 'time'):
             if len(c.aggregates): 
                 tree_json = self._generate_tree_json(c.aggregates, c.time, 
-                        c.totals.get(c.time, 0), c.aggregate_url)
+                    c.totals.get(c.time, 0))
                 stream = stream | Transformer('html/head')\
                     .append(HTML(HEAD_SNIPPET % tree_json))
                 stream = stream | Transformer('//div[@id="description"]')\
                     .before(HTML(BODY_SNIPPET))
         return stream 
 
-    def _generate_tree_json(self, aggregates, time, total, urlfunc):
+    def _generate_tree_json(self, aggregates, time, total):
+        from wdmmg.lib.helpers import dimension_url, render_value
         fields = []
         for obj, time_values in aggregates:
             value = time_values.get(time)
             if value <= 0: 
                 continue
-            title = obj.get('label', obj.get('name'))
             show_title = (value/max(1,total)) > TITLE_CUTOFF
             field = {'children': [],
                      'id': str(obj.get('_id')),
-                     'name': title,
+                     'name': render_value(obj),
                      'data': {
                             'value': value,
                             'printable_value': h.format_number(value),
                             '$area': int(value / 1000),
-                            'title': title, 
+                            'title': render_value(obj), 
                             'show_title': show_title,
-                            'link': urlfunc(obj),
+                            'link': dimension_url(obj),
                             '$color': '#333333'
                         }
                      }
