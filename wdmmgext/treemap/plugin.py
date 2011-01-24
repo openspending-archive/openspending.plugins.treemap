@@ -8,6 +8,7 @@ from genshi.filters import Transformer
 from genshi.input import HTML
 
 from wdmmg.lib import helpers as h
+from wdmmg.lib.color import color_range, parent_color
 from wdmmg.plugins import SingletonPlugin, implements
 from wdmmg.plugins import IGenshiStreamFilter 
 
@@ -59,10 +60,10 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
 
     def filter(self, stream):
         from pylons import tmpl_context as c 
-        if hasattr(c, 'aggregates') and hasattr(c, 'time'):
-            if len(c.aggregates): 
-                tree_json = self._generate_tree_json(c.aggregates, c.time, 
-                    c.totals.get(c.time, 0))
+        if hasattr(c, 'viewstate') and hasattr(c, 'time'):
+            if len(c.viewstate.aggregates): 
+                tree_json = self._generate_tree_json(c.viewstate.aggregates, 
+                    c.time, c.viewstate.totals.get(c.time, 0))
                 stream = stream | Transformer('html/head')\
                     .append(HTML(HEAD_SNIPPET % tree_json))
                 stream = stream | Transformer('//div[@id="description"]')\
@@ -76,9 +77,17 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
             value = time_values.get(time)
             if value <= 0: 
                 continue
+            if isinstance(obj, dict) and 'color' in obj:
+                color = obj.get('color') 
+            elif isinstance(obj, dict):
+                pcolor = parent_color(obj)
+                crange = list(color_range(pcolor, len(aggregates)))
+                color = list(crange)[aggregates.index((obj, time_values))]
+            else:
+                color = '#333333'
             show_title = (value/max(1,total)) > TITLE_CUTOFF
             field = {'children': [],
-                     'id': str(obj.get('_id')),
+                     'id': str(obj.get('_id')) if isinstance(obj, dict) else hash(obj),
                      'name': render_value(obj),
                      'data': {
                             'value': value,
@@ -87,7 +96,7 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
                             'title': render_value(obj), 
                             'show_title': show_title,
                             'link': dimension_url(obj),
-                            '$color': '#333333'
+                            '$color': color
                         }
                      }
             fields.append(field)
