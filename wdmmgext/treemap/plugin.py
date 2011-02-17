@@ -34,9 +34,15 @@ $(document).ready(function() {
 	font-weight: bold; 
 }
 
+#treemap div.desc {
+    padding: 0.8em;
+	font-weight: normal;
+    overflow: hidden; 
+}
+
 #treemap h2 {
-	font-family: Georgia, serif; 
-	font-size: 1.4em;
+    font-family: Graublau, Georgia, serif; 
+	font-size: 1.6em;
 	color: #fff;
 	font-weight: normal;
 	margin-bottom: 0.1em;
@@ -66,8 +72,8 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
                     c.time, c.viewstate.totals.get(c.time, 0))
                 stream = stream | Transformer('html/head')\
                     .append(HTML(HEAD_SNIPPET % tree_json))
-                stream = stream | Transformer('//div[@id="description"]')\
-                    .before(HTML(BODY_SNIPPET))
+                stream = stream | Transformer('//div[@id="vis"]')\
+                    .append(HTML(BODY_SNIPPET))
         return stream 
 
     def _generate_tree_json(self, aggregates, time, total):

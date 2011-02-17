@@ -92,12 +92,12 @@ function init_treemap(json){
     //Add the name of the node in the corresponding label
     //This method is called once, on label creation and only for DOM labels.
     onCreateLabel: function(domElement, node){
-				//console.log(node);
-				if (node.data.show_title) {
-        	domElement.innerHTML = "<h2>&nbsp;" + node.data.printable_value + "</h2>" + node.name;
-				} else {
-					domElement.innerHTML = "&nbsp;";
-				}
+	    //console.log(node);
+		if (node.data.show_title) {
+            domElement.innerHTML = "<div class='desc'><h2>" + node.data.printable_value + "</h2>" + node.name + "</div>";
+        } else {
+			domElement.innerHTML = "&nbsp;";
+        }
     }
   });
   tm.loadJSON(json);
