@@ -5,8 +5,7 @@ var labelType, useGradients, nativeTextSupport, animate;
       iStuff = ua.match(/iPhone/i) || ua.match(/iPad/i),
       typeOfCanvas = typeof HTMLCanvasElement,
       nativeCanvasSupport = (typeOfCanvas == 'object' || typeOfCanvas == 'function'),
-      textSupport = nativeCanvasSupport 
-        && (typeof document.createElement('canvas').getContext('2d').fillText == 'function');
+      textSupport = nativeCanvasSupport && (typeof document.createElement('canvas').getContext('2d').fillText == 'function');
   //I'm setting this based on the fact that ExCanvas provides text support for IE
   //and that as of today iPhone/iPad current text support is lame
   labelType = (!nativeCanvasSupport || (textSupport && !iStuff))? 'Native' : 'HTML';
@@ -71,9 +70,9 @@ function init_treemap(json){
       offsetX: 20,
       offsetY: 20,
       onShow: function(tip, node, isLeaf, domElement) {
-        var html = "<div class=\"tip-title\">" + node.name 
-					+ ": " + node.data.printable_value
-          + "</div><div class=\"tip-text\">";
+        var html = '<div class="tip-title">' + node.name +
+            ': ' + node.data.printable_value +
+            '</div><div class="tip-text">';
         var data = node.data;
         tip.innerHTML =  html; 
       }  
@@ -84,7 +83,8 @@ function init_treemap(json){
     //call for the requested subtree. When completed, the onComplete   
     //callback method should be called.  
     request: function(nodeId, level, onComplete){  
-      var tree = eval('(' + json + ')');  
+      // var tree = eval('(' + json + ')');
+      var tree = json;  
       var subtree = $jit.json.getSubtree(tree, nodeId);  
       $jit.json.prune(subtree, 1);  
       onComplete.onComplete(nodeId, subtree);  
