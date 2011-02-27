@@ -67,11 +67,11 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
     def filter(self, stream):
         from pylons import tmpl_context as c 
         if hasattr(c, 'viewstate') and hasattr(c, 'time'):
-            if len(c.viewstate.aggregates): 
-                tree_json = self._generate_tree_json(c.viewstate.aggregates, 
-                    c.time, c.viewstate.totals.get(c.time, 0))
+            tree_json = self._generate_tree_json(c.viewstate.aggregates, 
+                c.time, c.viewstate.totals.get(c.time, 0))
+            if tree_json is not None:
                 stream = stream | Transformer('html/head')\
-                    .append(HTML(HEAD_SNIPPET % tree_json))
+                   .append(HTML(HEAD_SNIPPET % tree_json))
                 stream = stream | Transformer('//div[@id="vis"]')\
                     .append(HTML(BODY_SNIPPET))
         return stream 
@@ -106,5 +106,7 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
                         }
                      }
             fields.append(field)
+        if not len(fields):
+            return None
         return json.dumps({'children': fields}) 
 
