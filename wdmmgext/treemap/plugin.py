@@ -2,6 +2,7 @@ try:
     import json 
 except ImportError:
     import simplejson as json
+import random
 
 from pylons.i18n import get_lang, _
 from genshi.filters import Transformer
@@ -18,14 +19,25 @@ TITLE_CUTOFF = 0.02
 HEAD_SNIPPET = """
 <!-- wdmmg-treemap includes -->
 <script src="/js/thejit-2.js"></script>
-<script src="/js/treemap.js"></script>
+<script src="/js/jitload.js"></script>
 <script>
 $(document).ready(function() {
-    init_treemap(%s);
+    var treemap_data = %s;
+    var timeseries_data = %s;
+    init_treemap(treemap_data);
+    $("#_vis_select").change(function(e){
+        $("#mainvis").html("");
+        if (e.target.value == 'treemap') {
+            init_treemap(treemap_data);
+        } else {
+            init_timeseries(timeseries_data);
+        }
+        return false;
+    });
 });
 </script>
 <style>
-#treemap {
+#mainvis {
 	position: relative;
 	overflow: hidden;
     cursor: pointer;
@@ -34,13 +46,13 @@ $(document).ready(function() {
 	font-weight: bold; 
 }
 
-#treemap div.desc {
+#mainvis div.desc {
     padding: 0.8em;
 	font-weight: normal;
     overflow: hidden; 
 }
 
-#treemap h2 {
+#mainvis h2 {
     font-family: Graublau, Georgia, serif; 
 	font-size: 1.6em;
 	color: #fff;
@@ -57,8 +69,17 @@ $(document).ready(function() {
 <!-- wdmmg-treemap end -->
 """
 
+VIS_SELECT_SNIPPET = """
+<form id="_vis_form">
+    <select name="_vis" id="_vis_select"> 
+        <option value="treemap">Composition</option>
+        <option value="timeseries">Time Series</option>
+    </select>
+</form>
+"""
+
 BODY_SNIPPET = """
-<div id='treemap' style='width: auto; height: 400px;'>&nbsp;</div><br/>
+<div id='mainvis' style='width: auto; height: 400px;'>&nbsp;</div><br/>
 """
 
 class TreemapGenshiStreamFilter(SingletonPlugin):
@@ -69,9 +90,12 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
         if hasattr(c, 'viewstate') and hasattr(c, 'time'):
             tree_json = self._generate_tree_json(c.viewstate.aggregates, 
                 c.time, c.viewstate.totals.get(c.time, 0))
+            ts_json = self._generate_ts_json(c.viewstate.aggregates, c.times)
             if tree_json is not None:
+                stream = stream | Transformer('//form[@id="_time_form"]')\
+                   .append(HTML(VIS_SELECT_SNIPPET))
                 stream = stream | Transformer('html/head')\
-                   .append(HTML(HEAD_SNIPPET % tree_json))
+                   .append(HTML(HEAD_SNIPPET % (tree_json, ts_json)))
                 stream = stream | Transformer('//div[@id="vis"]')\
                     .append(HTML(BODY_SNIPPET))
         return stream 
@@ -110,3 +134,28 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
             return None
         return json.dumps({'children': fields}) 
 
+    def _generate_ts_json(self, aggregates, times):
+        from wdmmg.lib.helpers import dimension_url, render_value
+        to_id = lambda obj: str(obj.get('_id')) if isinstance(obj, dict) else hash(obj)
+        label = [to_id(o) for o, tv in aggregates]
+        values = []
+        for time in times:
+            _values = []
+            for obj, time_values in aggregates:
+                _values.append(time_values.get(time, 0))
+            values.append({"label": str(time), "values": _values})
+        details = {}
+        for obj, ts in aggregates:
+            props = {
+                    'title': render_value(obj),
+                    'link': dimension_url(obj),
+                    'color': '#333333'
+                    }
+            details[to_id(obj)] = props
+        if not len(values):
+            return None
+        return json.dumps({
+            'label': label,
+            'details': details,
+            'values': values
+            })

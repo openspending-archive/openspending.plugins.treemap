@@ -16,7 +16,7 @@ var labelType, useGradients, nativeTextSupport, animate;
 
 function init_treemap(json){
   var tm = new $jit.TM.Squarified({
-    injectInto: 'treemap',
+    injectInto: 'mainvis',
     levelsToShow: 1,
     titleHeight: 0,
     animate: animate,
@@ -102,4 +102,51 @@ function init_treemap(json){
   });
   tm.loadJSON(json);
   tm.refresh();
+}
+
+
+function init_timeseries(json) {
+  var ac = new $jit.AreaChart({ 
+    injectInto: 'mainvis',
+    levelsToShow: 1,
+    titleHeight: 0,
+    animate: animate,
+    
+    offset: 2,
+    Label: {
+      type: 'HTML',
+      size: 12,
+      family: 'Tahoma, Verdana, Arial',
+      color: '#DDE7F0'
+      },
+    Node: {
+      /*color: '#243448',*/
+      CanvasStyles: {
+        shadowBlur: 0,
+        shadowColor: '#000'
+      }
+    },
+    Events: {
+      enable: true,
+      onClick: function(node) {
+        if(node) {
+            document.location = node.data.link;
+        }
+      },
+      onRightClick: function() {
+        tm.out();
+      },
+    },
+    duration: 500,
+    Tips: {
+      enable: true,
+      type: 'Native',
+      offsetX: 20,
+      offsetY: 20,
+      onShow: function(tip, elem) {
+         tip.innerHTML = "<b>" + json.details[elem.name].title + "</b>: " + elem.value;
+      }
+    }
+  });
+  ac.loadJSON(json);
 }
