@@ -22,17 +22,9 @@ HEAD_SNIPPET = """
 <script src="/js/jitload.js"></script>
 <script>
 $(document).ready(function() {
-    var treemap_data = %s;
-    var timeseries_data = %s;
-    init_treemap(treemap_data);
-    $("#_vis_select").change(function(e){
-        $("#mainvis").html("");
-        if (e.target.value == 'treemap') {
-            init_treemap(treemap_data);
-        } else {
-            init_timeseries(timeseries_data);
-        }
-        return false;
+    OpenSpending.DatasetPage.init({
+        treemapData: %s,
+        timeseriesData: %s
     });
 });
 </script>
@@ -70,12 +62,10 @@ $(document).ready(function() {
 """
 
 VIS_SELECT_SNIPPET = """
-<form id="_vis_form">
-    <select name="_vis" id="_vis_select"> 
+    <select id="_vis_select"> 
         <option value="treemap">Composition</option>
         <option value="timeseries">Time Series</option>
     </select>
-</form>
 """
 
 BODY_SNIPPET = """
@@ -93,12 +83,22 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
             ts_json = self._generate_ts_json(c.viewstate.aggregates, c.times)
             if tree_json is not None:
                 stream = stream | Transformer('//form[@id="_time_form"]')\
-                   .append(HTML(VIS_SELECT_SNIPPET))
+                   .prepend(HTML(VIS_SELECT_SNIPPET))
                 stream = stream | Transformer('html/head')\
                    .append(HTML(HEAD_SNIPPET % (tree_json, ts_json)))
                 stream = stream | Transformer('//div[@id="vis"]')\
                     .append(HTML(BODY_SNIPPET))
-        return stream 
+        return stream
+
+    def _get_color(self, obj, aggregates, time_values):
+        if isinstance(obj, dict) and 'color' in obj:
+            return obj.get('color') 
+        elif isinstance(obj, dict):
+            pcolor = parent_color(obj)
+            crange = list(color_range(pcolor, len(aggregates)))
+            return list(crange)[aggregates.index((obj, time_values))]
+        else:
+            return '#333333'
 
     def _generate_tree_json(self, aggregates, time, total):
         from wdmmg.lib.helpers import dimension_url, render_value
@@ -107,14 +107,7 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
             value = time_values.get(time)
             if value <= 0: 
                 continue
-            if isinstance(obj, dict) and 'color' in obj:
-                color = obj.get('color') 
-            elif isinstance(obj, dict):
-                pcolor = parent_color(obj)
-                crange = list(color_range(pcolor, len(aggregates)))
-                color = list(crange)[aggregates.index((obj, time_values))]
-            else:
-                color = '#333333'
+            color = self._get_color(obj, aggregates, time_values)
             show_title = (value/max(1,total)) > TITLE_CUTOFF
             field = {'children': [],
                      'id': str(obj.get('_id')) if isinstance(obj, dict) else hash(obj),
@@ -139,17 +132,21 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
         to_id = lambda obj: str(obj.get('_id')) if isinstance(obj, dict) else hash(obj)
         label = [to_id(o) for o, tv in aggregates]
         values = []
+        colored = False
+        colors = []
         for time in times:
             _values = []
             for obj, time_values in aggregates:
+                if not colored:
+                    colors.append(self._get_color(obj, aggregates, time_values))
                 _values.append(time_values.get(time, 0))
             values.append({"label": str(time), "values": _values})
+            colored = True
         details = {}
         for obj, ts in aggregates:
             props = {
                     'title': render_value(obj),
                     'link': dimension_url(obj),
-                    'color': '#333333'
                     }
             details[to_id(obj)] = props
         if not len(values):
@@ -157,5 +154,6 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
         return json.dumps({
             'label': label,
             'details': details,
-            'values': values
+            'values': values,
+            'colors': colors
             })
