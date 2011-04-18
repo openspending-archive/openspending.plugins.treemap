@@ -91,9 +91,7 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
         return stream
 
     def _get_color(self, obj, aggregates, time_values):
-        if isinstance(obj, dict) and 'color' in obj:
-            return obj.get('color') 
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             pcolor = parent_color(obj)
             crange = list(color_range(pcolor, len(aggregates)))
             return list(crange)[aggregates.index((obj, time_values))]

@@ -13,6 +13,7 @@ OpenSpending.DatasetPage = {
 OpenSpending.DatasetPage.Controller = Backbone.Controller.extend({
         routes: {
             "": "treemap",
+            "treemap": "treemap",
             "timeseries": "timeseries"
         },
         initialize: function(config) {
