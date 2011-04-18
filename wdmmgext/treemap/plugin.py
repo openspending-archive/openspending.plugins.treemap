@@ -69,15 +69,16 @@ VIS_SELECT_SNIPPET = """
 """
 
 BODY_SNIPPET = """
-<div id='mainvis' style='width: auto; height: 400px;'>&nbsp;</div><br/>
+<div id='mainvis' style='width: auto; height: %spx;'>&nbsp;</div><br/>
 """
 
 class TreemapGenshiStreamFilter(SingletonPlugin):
     implements(IGenshiStreamFilter, inherit=True)
 
     def filter(self, stream):
-        from pylons import tmpl_context as c 
+        from pylons import tmpl_context as c, request
         if hasattr(c, 'viewstate') and hasattr(c, 'time'):
+            vis_height = int(request.params.get('visheight', 400))
             tree_json = self._generate_tree_json(c.viewstate.aggregates, 
                 c.time, c.viewstate.totals.get(c.time, 0))
             ts_json = self._generate_ts_json(c.viewstate.aggregates, c.times)
@@ -87,7 +88,7 @@ class TreemapGenshiStreamFilter(SingletonPlugin):
                 stream = stream | Transformer('html/head')\
                    .append(HTML(HEAD_SNIPPET % (tree_json, ts_json)))
                 stream = stream | Transformer('//div[@id="vis"]')\
-                    .append(HTML(BODY_SNIPPET))
+                    .append(HTML(BODY_SNIPPET % vis_height))
         return stream
 
     def _get_color(self, obj, aggregates, time_values):
