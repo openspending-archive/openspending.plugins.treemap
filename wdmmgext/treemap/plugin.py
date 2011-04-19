@@ -18,6 +18,7 @@ TITLE_CUTOFF = 0.02
 # TODO: Move CSS to its own file. 
 HEAD_SNIPPET = """
 <!-- wdmmg-treemap includes -->
+<!--[if IE]><script language="javascript" type="text/javascript" src="/js/excanvas.js"></script><![endif]--> 
 <script src="/js/thejit-2.js"></script>
 <script src="/js/jitload.js"></script>
 <script>
