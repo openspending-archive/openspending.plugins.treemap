@@ -23,8 +23,7 @@ setup(
     },
     entry_points={
         'openspending.plugins': [
-            'treemap = openspending.plugins.treemap:TreemapGenshiStreamFilter',
-            'treemap = openspending.plugins.treemap:TreemapMiddleware'
+            'treemap = openspending.plugins.treemap:TreemapPlugin'
         ]
     },
     zip_safe=False

@@ -79,10 +79,11 @@ BODY_SNIPPET = """
 <div id='mainvis' style='width: auto; height: %spx;'>&nbsp;</div><br/>
 """
 
-class TreemapMiddleware(SingletonPlugin):
+class TreemapPlugin(SingletonPlugin):
+    implements(IGenshiStreamFilter, inherit=True)
     implements(IMiddleware, inherit=True)
 
-    def configure(self, app):
+    def setup_middleware(self, app):
         if not isinstance(app, Cascade):
             log.warn("TreemapMiddleware expected the app to be a Cascade "
                      "object, but it wasn't. Not adding public paths for "
@@ -97,9 +98,6 @@ class TreemapMiddleware(SingletonPlugin):
         app.apps.insert(0, static_app)
 
         return app
-
-class TreemapGenshiStreamFilter(SingletonPlugin):
-    implements(IGenshiStreamFilter, inherit=True)
 
     def filter(self, stream):
         if hasattr(c, 'viewstate') and hasattr(c, 'time'):
