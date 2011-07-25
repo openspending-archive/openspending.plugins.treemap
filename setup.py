@@ -1,38 +1,31 @@
 from setuptools import setup, find_packages
-import sys, os
+from treemap import __version__
 
-from wdmmgext.treemap import __version__
-
-setup(name='wdmmg-treemap',
-      version=__version__,
-      description="Where Does My Money Go? Treemap Visualizations",
-      long_description="",
-      classifiers=[], 
-      keywords='wdmmg treemap',
-      author='Open Knowledge Foundation',
-      author_email='info@okfn.org',
-      url='http://www.okfn.org',
-      license='GPL v3',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      namespace_packages=['wdmmgext'],
-      zip_safe=False,
-      message_extractors = {
-            'wdmmgext/treemap': [
-                ('**.py', 'python', None)
-                ],
-            'theme': [
-                ('templates/**.html', 'genshi', None),
-                ('public/**', 'ignore', None)
-                ],
-            },
-      install_requires=[
-          # -*- Extra requirements: -*-
-      ],
-      entry_points="""
-      # -*- Entry points: -*-
-      
-      [wdmmg.plugins]
-      treemap = wdmmgext.treemap:TreemapGenshiStreamFilter
-      """,
-      )
+setup(
+    name='openspending.plugins.treemap',
+    version=__version__,
+    description='OpenSpending Treemap Visualizations',
+    keywords='openspending openspending-plugin treemap visualisation',
+    author='Open Knowledge Foundation',
+    author_email='okfn-help at lists okfn org',
+    url='http://github.com/okfn/openspending.plugins.treemap',
+    license='GPL v3',
+    install_requires=[
+        'openspending'
+    ],
+    packages=find_packages('.packageroot'),
+    package_dir={'': '.packageroot'},
+    namespace_packages=['openspending', 'openspending.plugins'],
+    package_data={
+        'openspending.plugins.treemap': [
+            'public/js/*.js'
+        ]
+    },
+    entry_points={
+        'openspending.plugins': [
+            'treemap = openspending.plugins.treemap:TreemapGenshiStreamFilter',
+            'treemap = openspending.plugins.treemap:TreemapMiddleware'
+        ]
+    },
+    zip_safe=False
+)
