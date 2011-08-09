@@ -11,6 +11,7 @@ from paste.deploy.converters import asbool
 from genshi.filters import Transformer
 from genshi.input import HTML
 
+from openspending import model
 from openspending.lib import json
 from openspending.ui.lib import helpers as h
 from openspending.ui.lib.color import color_range, parent_color
@@ -130,6 +131,16 @@ class TreemapPlugin(SingletonPlugin):
                 continue
             color = self._get_color(obj, aggregates, time_values)
             show_title = (value/max(1,total)) > TITLE_CUTOFF
+            link = h.dimension_url(obj)
+
+            # Maybe we're at a leaf node. In which case, see if this view
+            # corresponds to a single entry, and if so, link to that.
+            if link == '#':
+                curs = model.entry.find({c.view.drilldown: obj})
+                if curs.count() == 1:
+                    e = model.entry.get_ref_dict(curs[0])
+                    link = h.dimension_url(e)
+
             field = {'children': [],
                      'id': str(obj.get('_id')) if isinstance(obj, dict) else hash(obj),
                      'name': h.render_value(obj),
@@ -139,7 +150,7 @@ class TreemapPlugin(SingletonPlugin):
                             '$area': int(value / 1000),
                             'title': h.render_value(obj),
                             'show_title': show_title,
-                            'link': h.dimension_url(obj),
+                            'link': link,
                             '$color': color
                         }
                      }
