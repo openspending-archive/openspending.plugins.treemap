@@ -4,6 +4,7 @@ import random
 
 from pylons import config, tmpl_context as c, request
 from pylons.i18n import get_lang, _
+from pylons.decorators.cache import beaker_cache
 from paste.cascade import Cascade
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
@@ -108,9 +109,11 @@ class TreemapPlugin(SingletonPlugin):
             ts_json = self._generate_ts_json(c.viewstate.aggregates, c.times)
             if tree_json is not None:
                 stream = stream | Transformer('//form[@id="_time_form"]')\
-                   .prepend(HTML(VIS_SELECT_SNIPPET))
+                    .prepend(HTML(VIS_SELECT_SNIPPET))
                 stream = stream | Transformer('html/head')\
-                   .append(HTML(HEAD_SNIPPET % (tree_json, ts_json)))
+                    .append(HTML(HEAD_SNIPPET % (tree_json, ts_json)))
+                stream = stream | Transformer('//div[@id="vis"]/span[@class="novis"]')\
+                    .remove()
                 stream = stream | Transformer('//div[@id="vis"]')\
                     .append(HTML(BODY_SNIPPET % vis_height))
         return stream
@@ -123,6 +126,7 @@ class TreemapPlugin(SingletonPlugin):
         else:
             return '#333333'
 
+    @beaker_cache(invalidate_on_startup=True, cache_response=False)
     def _generate_tree_json(self, aggregates, time, total):
         fields = []
         for obj, time_values in aggregates:
@@ -159,6 +163,7 @@ class TreemapPlugin(SingletonPlugin):
             return None
         return json.dumps({'children': fields})
 
+    @beaker_cache(invalidate_on_startup=True, cache_response=False)
     def _generate_ts_json(self, aggregates, times):
         to_id = lambda obj: str(obj.get('_id')) if isinstance(obj, dict) else hash(obj)
         label = [to_id(o) for o, tv in aggregates]
