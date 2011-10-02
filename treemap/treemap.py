@@ -38,32 +38,32 @@ $(document).ready(function() {
 </script>
 <style>
 #mainvis {
-	position: relative;
-	overflow: hidden;
+    position: relative;
+    overflow: hidden;
     cursor: pointer;
-	color: #fff;
-	font-size: 0.8em;
-	font-weight: bold;
+    color: #fff;
+    font-size: 0.8em;
+    font-weight: bold;
 }
 
 #mainvis div.desc {
     padding: 0.8em;
-	font-weight: normal;
+    font-weight: normal;
     overflow: hidden;
 }
 
 #mainvis h2 {
     font-family: Graublau, Georgia, serif;
-	font-size: 1.6em;
-	color: #fff;
-	font-weight: normal;
-	margin-bottom: 0.1em;
+    font-size: 1.6em;
+    color: #fff;
+    font-weight: normal;
+    margin-bottom: 0.1em;
 }
 
 #_tooltip {
-	background-color: #DDE7F0;
-	padding: 4px 6px;
-	border: 1px solid #A3B3C7;
+    background-color: #DDE7F0;
+    padding: 4px 6px;
+    border: 1px solid #A3B3C7;
 }
 </style>
 <!-- OpenSpending Treemap Plugin end -->
@@ -77,7 +77,7 @@ VIS_SELECT_SNIPPET = """
 """
 
 BODY_SNIPPET = """
-<div id='mainvis' style='width: auto; height: %spx;'>&nbsp;</div><br/>
+<div id='mainvis' style='width: auto; height: %spx;'>&nbsp;</div><br />
 """
 
 class TreemapPlugin(SingletonPlugin):
