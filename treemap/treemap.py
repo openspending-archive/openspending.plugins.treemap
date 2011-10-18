@@ -38,32 +38,32 @@ $(document).ready(function() {
 </script>
 <style>
 #mainvis {
-	position: relative;
-	overflow: hidden;
+    position: relative;
+    overflow: hidden;
     cursor: pointer;
-	color: #fff;
-	font-size: 0.8em;
-	font-weight: bold;
+    color: #fff;
+    font-size: 0.8em;
+    font-weight: bold;
 }
 
 #mainvis div.desc {
     padding: 0.8em;
-	font-weight: normal;
+    font-weight: normal;
     overflow: hidden;
 }
 
 #mainvis h2 {
     font-family: Graublau, Georgia, serif;
-	font-size: 1.6em;
-	color: #fff;
-	font-weight: normal;
-	margin-bottom: 0.1em;
+    font-size: 1.6em;
+    color: #fff;
+    font-weight: normal;
+    margin-bottom: 0.1em;
 }
 
 #_tooltip {
-	background-color: #DDE7F0;
-	padding: 4px 6px;
-	border: 1px solid #A3B3C7;
+    background-color: #DDE7F0;
+    padding: 4px 6px;
+    border: 1px solid #A3B3C7;
 }
 </style>
 <!-- OpenSpending Treemap Plugin end -->
@@ -104,8 +104,9 @@ class TreemapPlugin(SingletonPlugin):
         if hasattr(c, 'viewstate') and hasattr(c, 'time'):
             vis_height = int(request.params.get('visheight', 400))
             tree_json = self._generate_tree_json(c.viewstate.aggregates,
-                c.time, c.viewstate.totals.get(c.time, 0))
-            ts_json = self._generate_ts_json(c.viewstate.aggregates, c.times)
+                c.dataset.name, c.time, c.viewstate.totals.get(c.time, 0))
+            ts_json = self._generate_ts_json(c.viewstate.aggregates, 
+                c.dataset.name, c.times)
             if tree_json is not None:
                 stream = stream | Transformer('//form[@id="_time_form"]')\
                    .prepend(HTML(VIS_SELECT_SNIPPET))
@@ -123,7 +124,7 @@ class TreemapPlugin(SingletonPlugin):
         else:
             return '#333333'
 
-    def _generate_tree_json(self, aggregates, time, total):
+    def _generate_tree_json(self, aggregates, dataset, time, total):
         fields = []
         for obj, time_values in aggregates:
             value = time_values.get(time)
@@ -131,15 +132,16 @@ class TreemapPlugin(SingletonPlugin):
                 continue
             color = self._get_color(obj, aggregates, time_values)
             show_title = (value/max(1,total)) > TITLE_CUTOFF
-            link = h.dimension_url(obj)
+            link = h.classifier_url(dataset, obj) if \
+                    isinstance(obj, dict) else ''
 
             # Maybe we're at a leaf node. In which case, see if this view
             # corresponds to a single entry, and if so, link to that.
-            if link == '#':
-                curs = model.entry.find({c.view.drilldown: obj})
-                if curs.count() == 1:
-                    e = model.entry.get_ref_dict(curs[0])
-                    link = h.dimension_url(e)
+            #if link == '#':
+            #    curs = model.entry.find({c.view.drilldown: obj})
+            #    if curs.count() == 1:
+            #        e = model.entry.get_ref_dict(curs[0])
+            #        link = h.dimension_url(e)
 
             field = {'children': [],
                      'id': str(obj.get('_id')) if isinstance(obj, dict) else hash(obj),
@@ -159,8 +161,8 @@ class TreemapPlugin(SingletonPlugin):
             return None
         return json.dumps({'children': fields})
 
-    def _generate_ts_json(self, aggregates, times):
-        to_id = lambda obj: str(obj.get('_id')) if isinstance(obj, dict) else hash(obj)
+    def _generate_ts_json(self, aggregates, dataset, times):
+        to_id = lambda obj: str(obj.get('id')) if isinstance(obj, dict) else hash(obj)
         label = [to_id(o) for o, tv in aggregates]
         values = []
         colored = False
@@ -177,7 +179,8 @@ class TreemapPlugin(SingletonPlugin):
         for obj, ts in aggregates:
             props = {
                     'title': h.render_value(obj),
-                    'link': h.dimension_url(obj),
+                    'link': h.classifier_url(dataset, obj) if \
+                            isinstance(obj, dict) else None,
                     }
             details[to_id(obj)] = props
         if not len(values):
@@ -188,3 +191,4 @@ class TreemapPlugin(SingletonPlugin):
             'values': values,
             'colors': colors
             })
+
