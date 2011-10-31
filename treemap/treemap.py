@@ -11,7 +11,6 @@ from paste.deploy.converters import asbool
 from genshi.filters import Transformer
 from genshi.input import HTML
 
-from openspending import model
 from openspending.lib import json
 from openspending.ui.lib import helpers as h
 from openspending.ui.lib.color import color_range, parent_color
@@ -23,7 +22,7 @@ log = logging.getLogger(__name__)
 TITLE_CUTOFF = 0.02
 
 # TODO: Move CSS to its own file.
-HEAD_SNIPPET = """
+JS_SNIPPET = """
 <!-- OpenSpending Treemap Plugin includes -->
 <!--[if IE]><script language="javascript" type="text/javascript" src="/js/excanvas.js"></script><![endif]-->
 <script src="/js/thejit-2.js"></script>
@@ -36,6 +35,9 @@ $(document).ready(function() {
     });
 });
 </script>
+"""
+
+CSS_SNIPPET = """
 <style>
 #mainvis {
     position: relative;
@@ -103,15 +105,18 @@ class TreemapPlugin(SingletonPlugin):
     def filter(self, stream):
         if hasattr(c, 'viewstate') and hasattr(c, 'time'):
             vis_height = int(request.params.get('visheight', 400))
+            dimension = c.dataset[c.view.drilldown].name if c.view.drilldown else ''
             tree_json = self._generate_tree_json(c.viewstate.aggregates,
-                c.dataset.name, c.time, c.viewstate.totals.get(c.time, 0))
+                c.dataset.name, dimension, c.time, c.viewstate.totals.get(c.time, 0))
             ts_json = self._generate_ts_json(c.viewstate.aggregates, 
-                c.dataset.name, c.times)
+                c.dataset.name, dimension, c.times)
             if tree_json is not None:
                 stream = stream | Transformer('//form[@id="_time_form"]')\
                    .prepend(HTML(VIS_SELECT_SNIPPET))
+                stream = stream | Transformer('html/body')\
+                   .append(HTML(JS_SNIPPET % (tree_json, ts_json)))
                 stream = stream | Transformer('html/head')\
-                   .append(HTML(HEAD_SNIPPET % (tree_json, ts_json)))
+                   .append(HTML(CSS_SNIPPET))
                 stream = stream | Transformer('//div[@id="vis"]')\
                     .append(HTML(BODY_SNIPPET % vis_height))
         return stream
@@ -124,7 +129,7 @@ class TreemapPlugin(SingletonPlugin):
         else:
             return '#333333'
 
-    def _generate_tree_json(self, aggregates, dataset, time, total):
+    def _generate_tree_json(self, aggregates, dataset, dimension, time, total):
         fields = []
         for obj, time_values in aggregates:
             value = time_values.get(time)
@@ -132,7 +137,7 @@ class TreemapPlugin(SingletonPlugin):
                 continue
             color = self._get_color(obj, aggregates, time_values)
             show_title = (value/max(1,total)) > TITLE_CUTOFF
-            link = h.classifier_url(dataset, obj) if \
+            link = h.member_url(dataset, dimension, obj) if \
                     isinstance(obj, dict) else ''
 
             # Maybe we're at a leaf node. In which case, see if this view
@@ -161,7 +166,7 @@ class TreemapPlugin(SingletonPlugin):
             return None
         return json.dumps({'children': fields})
 
-    def _generate_ts_json(self, aggregates, dataset, times):
+    def _generate_ts_json(self, aggregates, dataset, dimension, times):
         to_id = lambda obj: str(obj.get('id')) if isinstance(obj, dict) else hash(obj)
         label = [to_id(o) for o, tv in aggregates]
         values = []
@@ -179,7 +184,7 @@ class TreemapPlugin(SingletonPlugin):
         for obj, ts in aggregates:
             props = {
                     'title': h.render_value(obj),
-                    'link': h.classifier_url(dataset, obj) if \
+                    'link': h.member_url(dataset, dimension, obj) if \
                             isinstance(obj, dict) else None,
                     }
             details[to_id(obj)] = props

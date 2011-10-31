@@ -10,7 +10,7 @@ OpenSpending.DatasetPage = {
     }
 };
 
-OpenSpending.DatasetPage.Controller = Backbone.Controller.extend({
+OpenSpending.DatasetPage.Controller = Backbone.Router.extend({
         routes: {
             "": "treemap",
             "treemap": "treemap",
