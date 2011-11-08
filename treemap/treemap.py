@@ -110,7 +110,7 @@ class TreemapPlugin(SingletonPlugin):
                 c.dataset.name, dimension, c.time, c.viewstate.totals.get(c.time, 0))
             ts_json = self._generate_ts_json(c.viewstate.aggregates, 
                 c.dataset.name, dimension, c.times)
-            if tree_json is not None:
+            if tree_json is not None and len(c.viewstate.aggregates) > 1:
                 stream = stream | Transformer('//form[@id="_time_form"]')\
                    .prepend(HTML(VIS_SELECT_SNIPPET))
                 stream = stream | Transformer('html/body')\
@@ -149,7 +149,7 @@ class TreemapPlugin(SingletonPlugin):
             #        link = h.dimension_url(e)
 
             field = {'children': [],
-                     'id': str(obj.get('_id')) if isinstance(obj, dict) else hash(obj),
+                     'id': str(obj.get('id')) if isinstance(obj, dict) else hash(obj),
                      'name': h.render_value(obj),
                      'data': {
                             'value': value,
