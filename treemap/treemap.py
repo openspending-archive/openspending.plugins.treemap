@@ -4,7 +4,6 @@ import random
 
 from pylons import config, tmpl_context as c, request
 from pylons.i18n import get_lang, _
-from pylons.decorators.cache import beaker_cache
 from paste.cascade import Cascade
 from paste.urlparser import StaticURLParser
 from paste.deploy.converters import asbool
@@ -80,7 +79,7 @@ VIS_SELECT_SNIPPET = """
 """
 
 BODY_SNIPPET = """
-<div id='mainvis' style='width: auto; height: %spx;'>&nbsp;</div><br />
+<div id='mainvis' style='width: auto; height: %spx;'>&nbsp;</div><br/>
 """
 
 class TreemapPlugin(SingletonPlugin):
@@ -118,8 +117,6 @@ class TreemapPlugin(SingletonPlugin):
                    .append(HTML(JS_SNIPPET % (tree_json, ts_json)))
                 stream = stream | Transformer('html/head')\
                    .append(HTML(CSS_SNIPPET))
-                stream = stream | Transformer('//div[@id="vis"]/span[@class="novis"]')\
-                    .remove()
                 stream = stream | Transformer('//div[@id="vis"]')\
                     .append(HTML(BODY_SNIPPET % vis_height))
         return stream
@@ -132,7 +129,6 @@ class TreemapPlugin(SingletonPlugin):
         else:
             return '#333333'
 
-    @beaker_cache(invalidate_on_startup=True, cache_response=False)
     def _generate_tree_json(self, aggregates, dataset, dimension, time, total):
         fields = []
         for obj, time_values in aggregates:
@@ -170,7 +166,6 @@ class TreemapPlugin(SingletonPlugin):
             return None
         return json.dumps({'children': fields})
 
-    @beaker_cache(invalidate_on_startup=True, cache_response=False)
     def _generate_ts_json(self, aggregates, dataset, dimension, times):
         to_id = lambda obj: str(obj.get('id')) if isinstance(obj, dict) else hash(obj)
         label = [to_id(o) for o, tv in aggregates]
@@ -201,3 +196,5 @@ class TreemapPlugin(SingletonPlugin):
             'values': values,
             'colors': colors
             })
+
+
