@@ -13,7 +13,8 @@ from genshi.input import HTML
 
 from openspending.lib import json
 from openspending.ui.lib import helpers as h
-from openspending.ui.lib.color import color_range, parent_color
+#from openspending.ui.lib.color import color_range, parent_color
+from openspending.ui.lib.color import palette_colors
 from openspending.plugins.core import SingletonPlugin, implements
 from openspending.plugins.interfaces import IMiddleware, IGenshiStreamFilter
 
@@ -122,12 +123,10 @@ class TreemapPlugin(SingletonPlugin):
         return stream
 
     def _get_color(self, obj, aggregates, time_values):
-        if isinstance(obj, dict):
-            pcolor = parent_color(obj)
-            crange = list(color_range(pcolor, len(aggregates)))
-            return list(crange)[aggregates.index((obj, time_values))]
-        else:
-            return '#333333'
+        if isinstance(obj, dict) and 'color' in obj.keys():
+            return obj['color']
+        colors = palette_colors(len(aggregates))
+        return colors[aggregates.index((obj, time_values))]
 
     def _generate_tree_json(self, aggregates, dataset, dimension, time, total):
         fields = []
