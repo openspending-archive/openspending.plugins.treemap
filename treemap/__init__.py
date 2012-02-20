@@ -1,3 +1,2 @@
-__version__ = '0.2.1'
-
 from .treemap import TreemapPlugin
+from treemap.version import __version__

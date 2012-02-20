@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
-from treemap import __version__
+
+execfile('treemap/version.py')
 
 setup(
     name='openspending.plugins.treemap',
